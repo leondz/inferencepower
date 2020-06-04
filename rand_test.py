@@ -13,12 +13,11 @@ from tqdm import tqdm
 # H is hidden dimension; D_out is output dimension.
 N, D_in, H, D_out = 64, 1024, 1024, 16
 
-def train_model(epochs=2000, activation=torch.nn.ReLU):
-
+def train_model(device, epochs=2000, activation=torch.nn.ReLU):
 
     # Create random Tensors to hold inputs and outputs
-    x = torch.randn(N, D_in)
-    y = torch.randn(N, D_out)
+    x = torch.randn(N, D_in, device=device)
+    y = torch.randn(N, D_out, device=device)
 
     # Use the nn package to define our model and loss function.
     model = torch.nn.Sequential(
@@ -26,7 +25,7 @@ def train_model(epochs=2000, activation=torch.nn.ReLU):
         activation(),
         activation(),
         torch.nn.Linear(H, D_out),
-    )
+    ).to(device)
     loss_fn = torch.nn.MSELoss(reduction='sum')
 
     # Use the optim package to define an Optimizer that will update the weights of
@@ -60,11 +59,12 @@ def train_model(epochs=2000, activation=torch.nn.ReLU):
         optimizer.step()
     return model
 
-def measure_activations(*, scale = 8, outprefix=None):
+def measure_activations(*, scale=4, outprefix=None, device='cpu'):
     """Measures the time taken to train and infer using different activation functions
 
     :param scale: Perform predictions for 10^scale items
     :param outprefix: Prefix of the file to output to
+    :param device: Torch device, e.g. cpu or cuda
     """
     #activations = [torch.nn.ReLU]
     activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink, torch.nn.Hardtanh, torch.nn.LeakyReLU, torch.nn.LogSigmoid, torch.nn.MultiheadAttention, torch.nn.PReLU, torch.nn.ReLU, torch.nn.ReLU6, torch.nn.RReLU, torch.nn.SELU, torch.nn.CELU, torch.nn.GELU, torch.nn.Sigmoid, torch.nn.Softplus, torch.nn.Softshrink, torch.nn.Softsign, torch.nn.Tanh, torch.nn.Tanhshrink, torch.nn.Threshold, torch.nn.Softmin, torch.nn.Softmax, torch.nn.Softmax2d, torch.nn.LogSoftmax, torch.nn.AdaptiveLogSoftmaxWithLoss, torch.nn.Identity, torch.nn.Linear, torch.nn.Bilinear, torch.nn.Dropout, torch.nn.Dropout2d, torch.nn.Dropout3d, torch.nn.AlphaDropout, torch.nn.BatchNorm1d, torch.nn.BatchNorm2d, torch.nn.BatchNorm3d, torch.nn.GroupNorm, torch.nn.SyncBatchNorm, torch.nn.InstanceNorm1d, torch.nn.InstanceNorm2d, torch.nn.InstanceNorm3d, torch.nn.LayerNorm, torch.nn.LocalResponseNorm]
@@ -75,24 +75,29 @@ def measure_activations(*, scale = 8, outprefix=None):
 
     train_epochs = 2000
 
+    if not outprefix:
+        outprefix = device.replace(':', '_')
+    device = torch.device(device)
+    print(device)
+
     # train models
     for func in activations:
         print(func)
         try:
             start = time.perf_counter()
-            m = train_model(activation=func)
+            m = train_model(device, activation=func)
             elapsed = time.perf_counter() - start
             print('elapsed:', elapsed)
             models[str(func)] = m
             train_times[str(func)] = elapsed
-        except:
+        except Exception as e:
             print("couldn't train")
             pass
 
     # run inference
     pred_items = int(math.pow(10, scale))
     print('building random data')
-    test_values = torch.randn(pred_items, D_in)
+    test_values = torch.randn(pred_items, D_in, device=device)
 
     for func_name, model in models.items():
         print(func_name)
