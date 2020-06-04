@@ -60,14 +60,29 @@ def train_model(device, epochs=2000, activation=torch.nn.ReLU):
     return model
 
 def measure_activations(*, scale=4, outprefix=None, device='cpu'):
-    """Measures the time taken to train and infer using different activation functions
+    """Measures the time taken to train and infer using different activation
+    functions
 
     :param scale: Perform predictions for 10^scale items
     :param outprefix: Prefix of the file to output to
     :param device: Torch device, e.g. cpu or cuda
     """
     #activations = [torch.nn.ReLU]
-    activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink, torch.nn.Hardtanh, torch.nn.LeakyReLU, torch.nn.LogSigmoid, torch.nn.MultiheadAttention, torch.nn.PReLU, torch.nn.ReLU, torch.nn.ReLU6, torch.nn.RReLU, torch.nn.SELU, torch.nn.CELU, torch.nn.GELU, torch.nn.Sigmoid, torch.nn.Softplus, torch.nn.Softshrink, torch.nn.Softsign, torch.nn.Tanh, torch.nn.Tanhshrink, torch.nn.Threshold, torch.nn.Softmin, torch.nn.Softmax, torch.nn.Softmax2d, torch.nn.LogSoftmax, torch.nn.AdaptiveLogSoftmaxWithLoss, torch.nn.Identity, torch.nn.Linear, torch.nn.Bilinear, torch.nn.Dropout, torch.nn.Dropout2d, torch.nn.Dropout3d, torch.nn.AlphaDropout, torch.nn.BatchNorm1d, torch.nn.BatchNorm2d, torch.nn.BatchNorm3d, torch.nn.GroupNorm, torch.nn.SyncBatchNorm, torch.nn.InstanceNorm1d, torch.nn.InstanceNorm2d, torch.nn.InstanceNorm3d, torch.nn.LayerNorm, torch.nn.LocalResponseNorm]
+    activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink,
+        torch.nn.Hardtanh, torch.nn.LeakyReLU, torch.nn.LogSigmoid,
+        torch.nn.MultiheadAttention, torch.nn.PReLU, torch.nn.ReLU,
+        torch.nn.ReLU6, torch.nn.RReLU, torch.nn.SELU, torch.nn.CELU,
+        torch.nn.GELU, torch.nn.Sigmoid, torch.nn.Softplus, torch.nn.Softshrink,
+        torch.nn.Softsign, torch.nn.Tanh, torch.nn.Tanhshrink,
+        torch.nn.Threshold, torch.nn.Softmin, torch.nn.Softmax,
+        torch.nn.Softmax2d, torch.nn.LogSoftmax,
+        torch.nn.AdaptiveLogSoftmaxWithLoss, torch.nn.Identity, torch.nn.Linear,
+        torch.nn.Bilinear, torch.nn.Dropout, torch.nn.Dropout2d,
+        torch.nn.Dropout3d, torch.nn.AlphaDropout, torch.nn.BatchNorm1d,
+        torch.nn.BatchNorm2d, torch.nn.BatchNorm3d, torch.nn.GroupNorm,
+        torch.nn.SyncBatchNorm, torch.nn.InstanceNorm1d,
+        torch.nn.InstanceNorm2d, torch.nn.InstanceNorm3d, torch.nn.LayerNorm,
+        torch.nn.LocalResponseNorm]
 
     models = {}
     train_times = {}
@@ -77,7 +92,7 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu'):
 
     if not outprefix:
         outprefix = device.replace(':', '_')
-    device = torch.device(device)
+    device_obj = torch.device(device)
     print(device)
 
     # train models
@@ -85,7 +100,7 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu'):
         print(func)
         try:
             start = time.perf_counter()
-            m = train_model(device, activation=func)
+            m = train_model(device_obj, activation=func)
             elapsed = time.perf_counter() - start
             print('elapsed:', elapsed)
             models[str(func)] = m
@@ -97,7 +112,7 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu'):
     # run inference
     pred_items = int(math.pow(10, scale))
     print('building random data')
-    test_values = torch.randn(pred_items, D_in, device=device)
+    test_values = torch.randn(pred_items, D_in, device=device_obj)
 
     for func_name, model in models.items():
         print(func_name)
@@ -109,7 +124,9 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu'):
         pred_times[func_name] = elapsed
 
 
-    experiment = {'train_epochs':train_epochs, 'pred_times':pred_times, 'train_times':train_times, 'pred_items':pred_items, 'cuda_available':torch.cuda.is_available()}
+    experiment = {'train_epochs':train_epochs, 'pred_items':pred_items,
+                    'train_times':train_times, 'pred_times':pred_times,
+                    'device':device}
     outfilename = outprefix + '_' + str(time.time()) + '.json'
     with open(outfilename, 'w') as outfile:
         outfile.write(json.dumps(experiment))
