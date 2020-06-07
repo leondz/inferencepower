@@ -10,6 +10,8 @@ import time
 import torch
 from tqdm import tqdm
 
+torch.manual_seed(0)
+
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
 N, D_in, H, D_out = 64, 1024, 1024, 16
@@ -23,6 +25,8 @@ def train_model(device, epochs=2000, activation=torch.nn.ReLU):
     # Use the nn package to define our model and loss function.
     model = torch.nn.Sequential(
         torch.nn.Linear(D_in, H),
+        activation(),
+        activation(),
         activation(),
         activation(),
         torch.nn.Linear(H, D_out),
