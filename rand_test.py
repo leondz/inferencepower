@@ -5,6 +5,7 @@ from clize import run
 
 import json
 import math
+import os
 import time
 import torch
 from tqdm import tqdm
@@ -97,30 +98,43 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu'):
 
     # train models
     for func in activations:
-        print(func)
+        activation_name = str(func).split("'")[1]
+        model_filename = activation_name+'.model.pt'
+        print(activation_name)
+        if not os.path.isfile(model_filename):
+            try:
+                start = time.perf_counter()
+                m = train_model(device_obj, activation=func)
+                elapsed = time.perf_counter() - start
+                print('elapsed:', elapsed)
+                train_times[activation_name] = elapsed
+                torch.save(m, model_filename)
+            except Exception as e:
+                print("couldn't train")
+                pass
+
         try:
-            start = time.perf_counter()
-            m = train_model(device_obj, activation=func)
-            elapsed = time.perf_counter() - start
-            print('elapsed:', elapsed)
-            models[str(func)] = m
-            train_times[str(func)] = elapsed
-        except Exception as e:
-            print("couldn't train")
+            models[activation_name] = torch.load(model_filename)
+            models[activation_name].eval()
+        except:
             pass
 
     # run inference
     pred_items = int(math.pow(10, scale))
     print('building random data')
-    test_values = torch.randn(pred_items, D_in, device=device_obj)
+    test_size = 100000 # capped
+    test_values = torch.randn(test_size, D_in, device=device_obj)
 
     for func_name, model in models.items():
+        pred_item_count = 0
         print(func_name)
         start = time.perf_counter()
-        predictions = model(test_values)
+        while pred_item_count < pred_items:
+            predictions = model(test_values)
+            pred_item_count += test_size
         elapsed = time.perf_counter() - start
         print('elapsed:', elapsed)
-        models[func_name] = m
+        #models[func_name] = m
         pred_times[func_name] = elapsed
 
 
