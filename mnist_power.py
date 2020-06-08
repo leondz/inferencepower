@@ -118,5 +118,5 @@ for activation in activations:
     times_taken[str(activation)] = time_taken
     accuracies[str(activation)] = accuracy
 
-with open('mnist_targets' + str(time.perf_counter()) + '.json'. 'w') as f:
+with open('mnist_targets.' + str(time.perf_counter()) + '.json', 'w') as f:
     f.write(json.dumps({'times':times_taken, 'accuracies':accuracies}))
