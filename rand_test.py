@@ -205,7 +205,8 @@ def measure_activations(*, scale=4, outprefix="test", device='cpu', runs=1,
                     'train_times':train_times, 'pred_times':pred_times,
                     'device':device, 'test_chunk_size':test_chunk_size,
                     'runs':runs, 'outprefix':outprefix,
-                    'parameters':saved_params, 'hardware_name':hardware_name}
+                    'parameters':saved_params, 'hardware_name':hardware_name,
+                    'started_at':time.strftime('%c %Z')}
     outfilename = run_name + '.json'
     with open(outfilename, 'w') as outfile:
         outfile.write(json.dumps(experiment))
