@@ -72,3 +72,18 @@ for json_filename in filenames:
     #print('wrote', outfilename)
 
 print(per_inst_timings)
+
+cpu_df = pd.DataFrame(data=per_inst_timings[0,],
+    index=[_n.split('.')[-1] for _n in activation_names], columns=range(9))
+print(cpu_df)
+
+import matplotlib.pyplot as plt
+cpu_df_T = cpu_df.transpose()
+cpu_df_T.plot.line(logy=True)
+plt.show()
+
+#import matplotlib.pyplot as plt
+#plt.plot('log10 count of examples processed', 'per instance time', data=cpu_df)
+#plt.plot('x', 'y', data=cpu_df)
+#plt.legend()
+#plt.show()
