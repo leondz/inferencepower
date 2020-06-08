@@ -26,7 +26,6 @@ activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink,
     torch.nn.InstanceNorm2d, torch.nn.InstanceNorm3d, torch.nn.LayerNorm,
     torch.nn.LocalResponseNorm]
 
-
 N, D_in, H, D_out = 128, 784, 1024, 10
 accuracy_threshold = 0.9
 
@@ -46,66 +45,78 @@ loss_fn = torch.nn.MSELoss(reduction='sum')
 learning_rate = 1e-4
 #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = torch.nn.NLLLoss()
-epochs=100
 
+max_epochs = 50
 
 times_taken = {}
+accuracies = {}
 for activation in activations:
     print('evaluating', activation)
-    model = torch.nn.Sequential(
-        torch.nn.Linear(D_in, H),
-        activation(),
-        activation(),
-        activation(),
-        activation(),
-        torch.nn.Linear(H, D_out),
-        torch.nn.LogSoftmax(dim=1),
-    )
+    model = False
+    try:
+        model = torch.nn.Sequential(
+            torch.nn.Linear(D_in, H),
+            activation(),
+            activation(),
+            activation(),
+            activation(),
+            torch.nn.Linear(H, D_out),
+            torch.nn.LogSoftmax(dim=1),
+        )
+    except:
+        print('--failed')
+        continue
+
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 
     time_taken = 0.0
     accuracy = 0.0
     e = 0
-    while accuracy < accuracy_threshold:
-        print('epoch', e, 'accuracy', accuracy, '/', accuracy_threshold)
-        running_loss = 0
-        for images, labels in tqdm(train_loader):
-            # Flatten MNIST images into a 784 long vector
-            images = images.view(images.shape[0], -1)
-            start = time.perf_counter() # get counting
-            # Training pass
-            optimizer.zero_grad()
-            output = model(images)
-            loss = criterion(output, labels)
-            #This is where the model learns by backpropagating
-            loss.backward()
-            #And optimizes its weights here
-            optimizer.step()
-            time_taken += time.perf_counter() - start # pause stopwatch
+    try:
+        while accuracy < accuracy_threshold and e < max_epochs:
+            print('epoch', e, 'accuracy', accuracy, '/', accuracy_threshold)
+            running_loss = 0
+            for images, labels in tqdm(train_loader):
+                # Flatten MNIST images into a 784 long vector
+                images = images.view(images.shape[0], -1)
+                start = time.perf_counter() # get counting
+                # Training pass
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
+                #This is where the model learns by backpropagating
+                loss.backward()
+                #And optimizes its weights here
+                optimizer.step()
+                time_taken += time.perf_counter() - start # pause stopwatch
 
-        correct_count, all_count = 0, 0
-        for images,labels in test_loader:
-          for i in range(len(labels)):
-            img = images[i].view(1, 784)
-            with torch.no_grad():
-                logps = model(img)
+            correct_count, all_count = 0, 0
+            for images,labels in test_loader:
+              for i in range(len(labels)):
+                img = images[i].view(1, 784)
+                with torch.no_grad():
+                    logps = model(img)
 
-            ps = torch.exp(logps)
-            probab = list(ps.numpy()[0])
-            pred_label = probab.index(max(probab))
-            true_label = labels.numpy()[i]
-            if(true_label == pred_label):
-              correct_count += 1
-            all_count += 1
+                ps = torch.exp(logps)
+                probab = list(ps.numpy()[0])
+                pred_label = probab.index(max(probab))
+                true_label = labels.numpy()[i]
+                if(true_label == pred_label):
+                  correct_count += 1
+                all_count += 1
 
-    #    print("Number Of Images Tested =", all_count)
-        accuracy = correct_count/all_count
-        e += 1
+        #    print("Number Of Images Tested =", all_count)
+            accuracy = correct_count/all_count
+            e += 1
+    except:
+        print('-- training failed')
+        continue
 
     print('activation', activation)
     print('final acc', accuracy)
     print('time', time_taken)
     times_taken[str(activation)] = time_taken
+    accuracies[str(activation)] = accuracy
 
-with open('mnist_targets' + str(time.perf_counter()) + '.json') as f:
-    f.write(json.dumps(times_taken))
+with open('mnist_targets' + str(time.perf_counter()) + '.json'. 'w') as f:
+    f.write(json.dumps({'times':times_taken, 'accuracies':accuracies}))
