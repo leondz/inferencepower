@@ -63,10 +63,11 @@ def train_models(activations, epochs=2000, device_obj=None):
         print(activation_name, end='')
         if not os.path.isfile(model_filename):
             try:
+                print(' -- training')
                 start = time.perf_counter()
                 m = train_model(device_obj, activation=func)
                 elapsed = time.perf_counter() - start
-                print(" -- elapsed:", elapsed)
+                #print(" -- elapsed:", elapsed)
                 train_times[activation_name] = elapsed
                 torch.save(m, model_filename)
             except Exception as e:
