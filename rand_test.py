@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from clize import run
-
+import clize
 import json
 import math
 import os
 import random
-import time
+import sys
 import torch
+import time
 from tqdm import tqdm
+
+# ignore warnings
+if not sys.warnoptions:
+    import warnings
+    warnings.simplefilter("ignore")
+
 
 torch.manual_seed(0)
 
@@ -52,18 +58,20 @@ def train_models(activations, epochs=2000):
     for func in activations:
         activation_name = str(func).split("'")[1]
         model_filename = activation_name+'.model.pt'
-        print(activation_name)
+        print(activation_name, end='')
         if not os.path.isfile(model_filename):
             try:
                 start = time.perf_counter()
                 m = train_model(device_obj, activation=func)
                 elapsed = time.perf_counter() - start
-                print('elapsed:', elapsed)
+                print(" -- elapsed:", elapsed)
                 train_times[activation_name] = elapsed
                 torch.save(m, model_filename)
             except Exception as e:
-                print("couldn't train")
+                print(" XX couldn't train")
                 pass
+        else:
+            print(' -- loaded')
 
         try:
             models[activation_name] = torch.load(model_filename)
@@ -84,10 +92,10 @@ def do_preds(models, test_values, pred_items, runs=3):
         # shuffle function list each loop to reduce ordering effects
         random.shuffle(model_names)
 
-        for func_name in model_names:
+        for func_name in tqdm(model_names):
             model = models[func_name]
             pred_item_count = 0
-            print(func_name)
+            #print(func_name)
 
             start = time.perf_counter()
             # use capped test_values size to conserve memory;
@@ -97,7 +105,7 @@ def do_preds(models, test_values, pred_items, runs=3):
                 pred_item_count += test_values.shape[0]
             elapsed = time.perf_counter() - start
 
-            print('elapsed:', elapsed)
+            #print('elapsed:', elapsed)
             #models[func_name] = m
             pred_times[func_name] = elapsed
 
@@ -117,6 +125,8 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
     :param track_impact: Try to load experiment_impact_tracker
     :param test_size_cap: Size of test chunk; fit as much in RAM as possible
     """
+    saved_params=locals()
+
     #activations = [torch.nn.ReLU]
     activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink,
         torch.nn.Hardtanh, torch.nn.LeakyReLU, torch.nn.LogSigmoid,
@@ -162,10 +172,11 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
     experiment = {'train_epochs':train_epochs, 'pred_items':pred_items,
                     'train_times':train_times, 'pred_times':pred_times,
                     'device':device, 'test_chunk_size':test_chunk_size,
-                    'runs':runs, 'outprefix':outprefix}
+                    'runs':runs, 'outprefix':outprefix,
+                    'parameters':saved_params}
     outfilename = outprefix + '_' + str(time.time()) + '.json'
     with open(outfilename, 'w') as outfile:
         outfile.write(json.dumps(experiment))
 
 if __name__ == '__main__':
-    run(measure_activations)
+    clize.run(measure_activations)
