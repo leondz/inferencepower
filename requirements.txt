@@ -1,3 +1,8 @@
 torch >= 1.5.0
 clize >= 4.1.1
 experiment-impact-tracker >= 0.1.8
+numpy >= 1.1
+pandas >= 1.0.4
+sklearn
+scikit-learn >= 0.23
+tqdm >= 4.40
