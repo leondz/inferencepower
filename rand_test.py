@@ -80,9 +80,13 @@ def train_models(activations, epochs=2000):
             pass
     return models, train_times
 
-def do_preds(models, test_values, pred_items, runs=3):
+def do_preds(models, test_values, pred_items, runs=3, impact_run_name=False):
+    # track impact is either the run name, or False
     run_times = []
     model_names = list(models.keys())
+
+    if impact_run_name:
+        from experiment_impact_tracker.compute_tracker import ImpactTracker
 
     # eval loop
     for i in range(runs):
@@ -96,14 +100,25 @@ def do_preds(models, test_values, pred_items, runs=3):
             model = models[func_name]
             pred_item_count = 0
             #print(func_name)
+            if impact_run_name: # are we trying to track carbon impact?
+                with ImpactTracker(impact_run_name + '_' + func_name + '_' + str(i)) as tracker:
+                    tracker.launch_impact_monitor()
+                    start = time.perf_counter()
+                    # use capped test_values size to conserve memory;
+                    # go around until target # predictions made
+                    while pred_item_count < pred_items:
+                        predictions = model(test_values)
+                        pred_item_count += test_values.shape[0]
+                    elapsed = time.perf_counter() - start
 
-            start = time.perf_counter()
-            # use capped test_values size to conserve memory;
-            # go around until target # predictions made
-            while pred_item_count < pred_items:
-                predictions = model(test_values)
-                pred_item_count += test_values.shape[0]
-            elapsed = time.perf_counter() - start
+            else:
+                start = time.perf_counter()
+                # use capped test_values size to conserve memory;
+                # go around until target # predictions made
+                while pred_item_count < pred_items:
+                    predictions = model(test_values)
+                    pred_item_count += test_values.shape[0]
+                elapsed = time.perf_counter() - start
 
             #print('elapsed:', elapsed)
             #models[func_name] = m
@@ -112,7 +127,7 @@ def do_preds(models, test_values, pred_items, runs=3):
         run_times.append(pred_times)
     return run_times
 
-def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
+def measure_activations(*, scale=4, outprefix="test", device='cpu', runs=1,
     train_epochs = 2000, track_impact=False, test_size_cap = 100000):
     """Measures the time taken to train and infer using different activation
     functions
@@ -126,6 +141,8 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
     :param test_size_cap: Size of test chunk; fit as much in RAM as possible
     """
     saved_params=locals()
+
+    run_name = outprefix + '_' + str(time.time())
 
     #activations = [torch.nn.ReLU]
     activations = [torch.nn.ReLU, torch.nn.ELU, torch.nn.Hardshrink,
@@ -143,7 +160,6 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
         torch.nn.SyncBatchNorm, torch.nn.InstanceNorm1d,
         torch.nn.InstanceNorm2d, torch.nn.InstanceNorm3d, torch.nn.LayerNorm,
         torch.nn.LocalResponseNorm]
-
 
     # prefix for output files
     if not outprefix:
@@ -165,8 +181,14 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
         test_chunk_size = pred_items
     test_values = torch.randn(test_chunk_size, D_in, device=device_obj)
 
+    # if we're tracking CO2, pass run name as the impact tracker directory
+    impact_run_name = False
+    if track_impact:
+        impact_run_name = run_name
+
     # run inference
-    pred_times = do_preds(models, test_values, pred_items, runs=runs)
+    pred_times = do_preds(models, test_values, pred_items, runs=runs,
+        impact_run_name=impact_run_name)
 
     # save data
     experiment = {'train_epochs':train_epochs, 'pred_items':pred_items,
@@ -174,7 +196,7 @@ def measure_activations(*, scale=4, outprefix=None, device='cpu', runs=1,
                     'device':device, 'test_chunk_size':test_chunk_size,
                     'runs':runs, 'outprefix':outprefix,
                     'parameters':saved_params}
-    outfilename = outprefix + '_' + str(time.time()) + '.json'
+    outfilename = run_name + '.json'
     with open(outfilename, 'w') as outfile:
         outfile.write(json.dumps(experiment))
 
