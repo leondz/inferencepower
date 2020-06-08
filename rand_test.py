@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# estimate power consumption of activation functions
+
 import clize
 import json
 import math
@@ -50,7 +52,7 @@ def train_model(device, epochs=2000, activation=torch.nn.ReLU):
         optimizer.step()
     return model
 
-def train_models(activations, epochs=2000):
+def train_models(activations, epochs=2000, device_obj=None):
     models = {}
     train_times = {}
 
@@ -75,8 +77,9 @@ def train_models(activations, epochs=2000):
 
         try:
             models[activation_name] = torch.load(model_filename)
+            models[activation_name].to(device_obj)
             models[activation_name].eval()
-        except:
+        except FileNotFoundError:
             pass
     return models, train_times
 
@@ -167,10 +170,17 @@ def measure_activations(*, scale=4, outprefix="test", device='cpu', runs=1,
 
     # set device
     device_obj = torch.device(device)
-    print(device)
+    print(device, ' - ', end='')
+    hardware_name = 'unknown'
+    if device == 'cpu':
+        import cpuinfo
+        hardware_name = cpuinfo.get_cpu_info()['brand']
+    elif device == 'cuda':
+        hardware_name = torch.cuda.get_device_name()
+    print(hardware_name)
 
     # get the models, training if necessary
-    models, train_times = train_models(activations, epochs=train_epochs)
+    models, train_times = train_models(activations, epochs=train_epochs, device_obj=device_obj)
 
     # build test data
     pred_items = int(math.pow(10, scale)) # how many predictions in total
@@ -195,7 +205,7 @@ def measure_activations(*, scale=4, outprefix="test", device='cpu', runs=1,
                     'train_times':train_times, 'pred_times':pred_times,
                     'device':device, 'test_chunk_size':test_chunk_size,
                     'runs':runs, 'outprefix':outprefix,
-                    'parameters':saved_params}
+                    'parameters':saved_params, 'hardware_name':hardware_name}
     outfilename = run_name + '.json'
     with open(outfilename, 'w') as outfile:
         outfile.write(json.dumps(experiment))
