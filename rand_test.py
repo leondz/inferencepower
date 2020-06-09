@@ -44,6 +44,7 @@ def train_model(device, epochs=2000, activation=torch.nn.ReLU):
 
     learning_rate = 1e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    print(' -- training')
     for t in tqdm(range(epochs)):
         y_pred = model(x)
         loss = loss_fn(y_pred, y)
@@ -56,14 +57,16 @@ def train_models(activations, epochs=2000, device_obj=None):
     models = {}
     train_times = {}
 
+    if not os.path.isdir('model_cache'):
+        os.mkdir('model_cache')
+
     # train models
     for func in activations:
         activation_name = str(func).split("'")[1]
-        model_filename = activation_name+'.model.pt'
+        model_filename = 'model_cache/' + activation_name+'.model.pt'
         print(activation_name, end='')
         if not os.path.isfile(model_filename):
             try:
-                print(' -- training')
                 start = time.perf_counter()
                 m = train_model(device_obj, activation=func)
                 elapsed = time.perf_counter() - start
