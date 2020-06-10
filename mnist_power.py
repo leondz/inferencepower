@@ -3,6 +3,7 @@
 
 # measure how long it takes to reach a given perf on mnist, varying activation
 
+import json
 import time
 import torch
 import torchvision
@@ -46,7 +47,7 @@ learning_rate = 1e-4
 #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = torch.nn.NLLLoss()
 
-max_epochs = 50
+max_epochs = 100
 
 times_taken = {}
 accuracies = {}
