@@ -84,7 +84,7 @@ plt.ylabel('spread')
 plt.xlabel('number of instances, 10^n')
 plt.title("Relative spread between function performances")
 for prefix in d.keys():
-    linestyle = linestyle=next(linecycler)
+    linestyle = next(linecycler)
     plt.plot(range(scale_length), activation_spreads[prefix], lw=1.5,
         color=next(main_colours), linestyle=linestyle, marker='.', ms=6, markerfacecolor='none')
     plt.plot(range(scale_length), dropout_spreads[prefix], lw=1,
@@ -108,18 +108,18 @@ plt.show()
 
 
 fig = plt.figure(figsize=(8,5))
-plt.axis(ymin=0,ymax=6,xmin=0,xmax=scale_length-1)
+plt.axis(ymin=0,ymax=7.5,xmin=-0.2,xmax=scale_length-0.5)
 #plt.yscale('log')
 plt.grid(color='0.55', linestyle='dashed', lw=0.3)
 
-plt.ylabel('cost relative to identity activation')
+plt.ylabel('mean cost relative to identity activation')
 plt.xlabel('number of instances, 10^n')
 
 linecycler = cycle(lines)
-main_colours = cycle([plt.cm.cool(i) for i in np.linspace(0, 1, 4)])
-drop_colours =  cycle([plt.cm.autumn(i) for i in np.linspace(0, 1, 4)])
+main_colours = cycle([plt.cm.Paired(i) for i in np.linspace(0, 1, 12)])
+#drop_colours =  cycle([plt.cm.autumn(i) for i in np.linspace(0, 1, 4)])
 
-plt.title("Function variation w.r.t identity function, over data scales")
+plt.title("Activation function time variation w.r.t identity function, over data scales")
 for prefix in d.keys():
     print('prefix', prefix)
     identity_values = np.array(d[prefix][identity_idx]).reshape(9,1)
@@ -149,13 +149,19 @@ for prefix in d.keys():
     dropout_maxs = list(map(np.max, dropout_values))
 
     activation_colour = color=next(main_colours)
-    plt.plot(range(scale_length), activation_means, color=activation_colour)
-    plt.fill_between(range(scale_length), activation_means+activation_stds,
-        activation_mins-activation_stds, color=activation_colour, alpha=0.1)
+    #plt.plot(range(scale_length), activation_means, color=activation_colour)
+    plt.errorbar(range(scale_length), activation_means, yerr=activation_stds,
+        color=activation_colour, lw=1.5, elinewidth=1.5, capsize=8,
+        linestyle=next(linecycler), fmt='x', ms=6)
+
+# spreads: too big!
+#    plt.fill_between(range(scale_length), activation_means+activation_stds,
+#        activation_mins-activation_stds, color=activation_colour, alpha=0.1)
 
 
-    plt.legend(d.keys(), loc='upper right',
-        ncol=1, fontsize='small')
+legend = [_l.replace('data/', '').replace('.npy', '').replace('_', ' ') for _l in d.keys()]
+plt.legend(legend, loc='upper right',
+    ncol=1, fontsize='small')
 
     #plt.plot(range(scale_length), dropout_means, color=next(drop_colours))
 
