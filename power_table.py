@@ -86,8 +86,9 @@ print('check: sum ', sum(sum(per_inst_timings[device_index])))
 print('check: row0', sum(per_inst_timings[device_index][0]))
 print('check: col0', sum(per_inst_timings[device_index][:,0]))
 
-np.save(prefix + '.npy', per_inst_timings[device_index])
-
+data_filename = prefix + '.npy'
+print('writing to', data_filename)
+np.save(data_filename, per_inst_timings[device_index])
 
 import matplotlib.pyplot as plt
 fig = plt.figure(figsize=(8,5))
