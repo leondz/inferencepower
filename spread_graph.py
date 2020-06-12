@@ -90,7 +90,7 @@ for prefix in d.keys():
     plt.plot(range(scale_length), dropout_spreads[prefix], lw=1,
         color=next(drop_colours), linestyle=linestyle)
 
-legend = [_l.replace('data/', '').replace('.npy', '').replace('_', ' ') for _l in d.keys()]
+legend = [_l.replace('data/', '').replace('.npy', '').replace('_', ' ').replace('mac', 'consumer cpu') for _l in d.keys()]
 doubled_legend = [val for val in legend for _ in (0, 1)]
 for _j in range(len(d.keys())):
     doubled_legend[_j * 2] += ' activation'
@@ -98,8 +98,8 @@ for _j in range(len(d.keys())):
 
 plt.legend(doubled_legend, loc='upper right',
     ncol=1, fontsize='small')
-
-plt.show()
+fig.tight_layout()
+fig.savefig('groupspread.pdf')
 
 ### second graph:
 # with identity as 1.0, work out the relative scale and std dev of activations
@@ -159,10 +159,10 @@ for prefix in d.keys():
 #        activation_mins-activation_stds, color=activation_colour, alpha=0.1)
 
 
-legend = [_l.replace('data/', '').replace('.npy', '').replace('_', ' ') for _l in d.keys()]
+legend = [_l.replace('data/', '').replace('.npy', '').replace('_', ' ').replace('mac', 'consumer cpu') for _l in d.keys()]
 plt.legend(legend, loc='upper right',
     ncol=1, fontsize='small')
 
     #plt.plot(range(scale_length), dropout_means, color=next(drop_colours))
-
-plt.show()
+fig.tight_layout()
+fig.savefig('variation.pdf')
