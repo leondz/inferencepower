@@ -11,6 +11,8 @@ import sys
 
 np.set_printoptions(linewidth=200)
 
+print_latex_only=False # for the absolute table summaries
+
 prefix = sys.argv[1]
 print('prefix:', prefix)
 
@@ -79,6 +81,20 @@ for json_filename in filenames:
 #        print(activation_name, absolutes[activation_name], per_inst[activation_name])
         print(per_inst_timings[device_index, func_index, scale_index])
 
+if print_latex_only:
+    np.set_printoptions(linewidth=200, precision=3)
+    chunk = ''
+    for _i in range(len(activation_names)):
+        this_chunk = activation_names[_i].split('.')[-2]
+        if this_chunk != chunk:
+            print('\\hline')
+        chunk = this_chunk
+        print(activation_names[_i].split('.')[-1], '&',
+            str(absolute_timings[device_index][_i]).replace('[', '').replace(']', '').replace(' ', ' & '), "\\\\")
+    print('\\hline')
+    print(d['hardware_name'])
+    sys.exit()
+
 # per-instance timings with scale
 print(per_inst_timings[device_index])
 print('check: hash', hash(str(absolute_timings)), hash(str(per_inst_timings)))
@@ -129,22 +145,4 @@ for i in range(len(activation_names)):
 if legend:
     plt.legend([_n.split('.')[-1] for _n in activation_names], loc='upper right',
         ncol=2, fontsize='small')
-plt.show()
-
-
-
-
-if False:
-    cpu_df = pd.DataFrame(data=per_inst_timings[0,],
-    #    index=[_n.split('.')[-1] for _n in activation_names], columns=range(9))
-        index=[activation_names], columns=range(9))
-    print(cpu_df)
-
-    import matplotlib.pyplot as plt
-
-    cpu_df.T.plot.line(logy=True)
-    plt.show()
-
-    # absolute timing variances at scale.. 6
-    # y = time; x = func, sorted by mean; item = box+whisker mean+stddev
-    variance_scale = 6
+#plt.show()
