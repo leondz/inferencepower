@@ -8,6 +8,8 @@ The spread between activation functions and dropout functions exists across plat
 
 ![Spread in computation required per activation function](https://github.com/leondz/inferencepower/raw/master/groupspread.svg)
 
+Paper: [pdf](https://www.derczynski.com/papers/Activation_Function_Power_Consumption.pdf)
+
 
 ## Files
 
@@ -22,7 +24,7 @@ CC-BY 4.0 Leon Derczynski, ld@itu.dk 2020
 
 ## Reference
 
-Derczynski, Leon. "Power Consumption Variation over Activation Functions" (2020). arXiv.
+Derczynski, Leon. "Power Consumption Variation over Activation Functions" (2020). arXiv. [pdf](https://www.derczynski.com/papers/Activation_Function_Power_Consumption.pdf)
 
 ```
 @article{activationpower,
