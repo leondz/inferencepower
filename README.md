@@ -4,7 +4,7 @@ The power that machine learning models consume when making predictions can be af
 
 ![power per instance per activation function](https://github.com/leondz/inferencepower/raw/master/dc_cpu.svg)
 
-The spread between activation functions and dropout functions exists across platforms and across loads.
+The performance spread across the group of activation functions (and also across the group of dropout functions) exists across platforms and across loads.
 
 ![Spread in computation required per activation function](https://github.com/leondz/inferencepower/raw/master/groupspread.svg)
 
