@@ -105,8 +105,8 @@ print('check: col0', sum(per_inst_timings[device_index][:,0]))
 data_filename = prefix + '.npy'
 print('writing to', data_filename)
 np.save(data_filename, per_inst_timings[device_index])
-with open(prefix + '_activation_list.json', 'w') as f:
-    f.write(json.dumps(activation_names))
+#with open(prefix + '_activation_list.json', 'w') as f:
+#    f.write(json.dumps(activation_names))
 
 import matplotlib.pyplot as plt
 fig = plt.figure(figsize=(8,5))
@@ -145,4 +145,4 @@ for i in range(len(activation_names)):
 if legend:
     plt.legend([_n.split('.')[-1] for _n in activation_names], loc='upper right',
         ncol=2, fontsize='small')
-#plt.show()
+plt.show()
