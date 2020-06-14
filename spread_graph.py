@@ -100,6 +100,7 @@ plt.legend(doubled_legend, loc='upper right',
     ncol=1, fontsize='small')
 fig.tight_layout()
 fig.savefig('groupspread.pdf')
+fig.savefig('groupspread.svg')
 
 ### second graph:
 # with identity as 1.0, work out the relative scale and std dev of activations
