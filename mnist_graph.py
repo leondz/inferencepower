@@ -60,7 +60,7 @@ plt.xlabel('activation function')
 plt.ylabel('seconds')
 plt.bar(range(len(sorted_means)), sorted_means, color=colours)
 plt.errorbar(range(len(sorted_means)), sorted_means, yerr=errors,
-    color='gray', lw=0, elinewidth=1, capsize=8)
+    color='black', lw=0, elinewidth=1, capsize=9)
 ax.set_xticks(range(len(sorted_means)))
 print('legend', legend)
 ax.set_xticklabels(labels=legend, rotation=65)
