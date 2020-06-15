@@ -6,7 +6,7 @@ For a dummy workload:
 
 ![power per instance per activation function](https://github.com/leondz/inferencepower/raw/master/dc_cpu.svg)
 
-The performance spread across the group of activation functions (and also across the group of dropout functions) exists across platforms and across loads. The specific high-variation spots depend on the scale and complexity of the workload; our workload is simple, and other workloads may experience maximum variation at other relative scales. In our case, GPUs can experience up to an order of magnitude in difference between execution performance of the fastest- and the slowest-running activation functions. This impacts power consumption (and emissions).
+The performance spread across the group of activation functions (and also across the group of dropout functions) exists across platforms and across loads. The specific high-variation spots depend on the scale and complexity of the workload; our workload is simple, and other workloads may experience maximum variation at other relative scales. In our case, GPUs can experience up to an order of magnitude in difference between execution performance of the fastest- and the slowest-running activation functions. This impacts power consumption, cost, and emissions.
 
 ![Spread in computation required per activation function](https://github.com/leondz/inferencepower/raw/master/groupspread.svg)
 
@@ -26,7 +26,7 @@ CC-BY 4.0 Leon Derczynski, ld@itu.dk 2020
 
 ## Reference
 
-Derczynski, Leon. "Power Consumption Variation over Activation Functions" (2020). arXiv. [pdf](https://www.derczynski.com/papers/Activation_Function_Power_Consumption.pdf)
+Derczynski, Leon. "Power Consumption Variation over Activation Functions" (2020). [arXiv:2006/07237](https://arxiv.org/abs/2006.07237). [pdf](https://www.derczynski.com/papers/Activation_Function_Power_Consumption.pdf)
 
 ```
 @article{activationpower,
